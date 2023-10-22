@@ -28,17 +28,20 @@ export function game() {
   loadShip(battleship);
   loadShip(carrier);
 
-  placeShipAI(submarine);
-  placeShipAI(cruiser);
-  placeShipAI(destroyer);
-  placeShipAI(battleship);
-  placeShipAI(carrier);
-  console.log(battlefieldOpponent.board);
+  // AI Ships
+  const submarineAI = new Ship("submarine", 2);
+  const cruiserAI = new Ship("cruiser", 3);
+  const destroyerAI = new Ship("destroyer", 4);
+  const battleshipAI = new Ship("battleship", 4);
+  const carrierAI = new Ship("carrier", 5);
 
-  //const ships = document.querySelector(".ships");
+  placeShipAI(submarineAI);
+  placeShipAI(cruiserAI);
+  placeShipAI(destroyerAI);
+  placeShipAI(battleshipAI);
+  placeShipAI(carrierAI);
 
   function loadShip(shipData) {
-    console.log(shipData);
     const ships = document.querySelector(".ships");
     const ship = document.createElement("div");
 
@@ -98,7 +101,6 @@ export function game() {
 
     const ships = document.querySelector(".ships");
     const board = document.querySelector("#battlefieldPlayer > .grid");
-    console.log(data, x, y);
     switch (data) {
       case "submarine":
         if (battlefieldPlayer.isPlaceShipValid(submarine.length, x, y)) {
@@ -129,7 +131,6 @@ export function game() {
         }
         break;
       case "destroyer":
-        console.log(destroyer.length, x, y);
         if (battlefieldPlayer.isPlaceShipValid(destroyer.length, x, y)) {
           battlefieldPlayer.placeShip(destroyer, x, y);
           var ship = ships.querySelector(`#${data}`);
@@ -175,62 +176,108 @@ export function game() {
     if (ships.childElementCount === 0) {
       startGame();
     }
-    //console.log(battlefieldPlayer.board);
   }
 
   function startGame() {
     const oppBoard = document.querySelector("#battlefieldOpponent > .grid");
     const playerBoard = document.querySelector("#battlefieldPlayer > .grid");
     const turnDisplay = document.querySelector(".turn");
-  
+
     const currentPlayer = player.checkTurn() ? player : computer;
-    const opponentBoard = player.checkTurn() ? battlefieldOpponent : battlefieldPlayer;
-  
+    const opponentBoard = player.checkTurn()
+      ? battlefieldOpponent
+      : battlefieldPlayer;
+
     turnDisplay.textContent = `${currentPlayer.getName()}'s Turn...`;
-  
-    if (currentPlayer.checkTurn()) {
+
+    // Player chooses where to attack
+    if (currentPlayer === player) {
       oppBoard.parentElement.classList.remove("opacity");
       playerBoard.parentElement.classList.add("opacity");
-  
-      oppBoard.addEventListener("click", (e) => {
-        if (currentPlayer.checkTurn()) {
-          console.log(currentPlayer)
-          const x = parseInt(e.target.dataset.x);
-          const y = parseInt(e.target.dataset.y);
-          console.log(x,y, opponentBoard, oppBoard)
-          currentPlayer.attack(x, y, computer, opponentBoard);
-          boardEvents("battlefieldOpponent", battlefieldOpponent);
-  
-          // Check if the game is over and display a message if it is
-          // if (battlefieldOpponent.allSunk()) {
-          //   turnDisplay.textContent = `${currentPlayer.getName()} wins!`;
-          //   return; // Game over, don't continue.
-          // }
-  
-          // Switch to the computer's turn after a delay
-          setTimeout(() => {
-            computer.attack(player, battlefieldPlayer);
-            boardEvents("battlefieldPlayer", battlefieldPlayer);
-  
-            // Check if the game is over and display a message if it is
-            // if (battlefieldPlayer.allSunk()) {
-            //   turnDisplay.textContent = `${computer.getName()} wins!`;
-            //   return; // Game over, don't continue.
-            // }
-  
-            startGame(); // Continue the game
-          }, 1000);
+
+      oppBoard.addEventListener("click", function handleMove(e) {
+        const x = parseInt(e.target.dataset.x);
+        const y = parseInt(e.target.dataset.y);
+        
+        oppBoard.removeEventListener("click", handleMove);
+        if (
+          opponentBoard.attackedCoords.some(
+            (coord) => coord.x === x && coord.y === y
+          )
+        ) {
+
+          startGame();
+          return;
         }
+
+        currentPlayer.attack(x, y, opponentBoard);
+        boardEvents("battlefieldOpponent", battlefieldOpponent);
+
+        if (
+          opponentBoard.allSunk(
+            submarineAI,
+            cruiserAI,
+            destroyerAI,
+            battleshipAI,
+            carrierAI
+          )
+        ) {
+          endGame(currentPlayer, turnDisplay);
+          return;
+        }
+
+        currentPlayer.endTurn(computer);
+        startGame();
       });
     }
+
+    if (currentPlayer === computer) {
+      oppBoard.parentElement.classList.add("opacity");
+      playerBoard.parentElement.classList.remove("opacity");
+      // Switch to the computer's turn after a delay
+      setTimeout(() => {
+        const x = Math.floor(Math.random() * 10);
+        const y = Math.floor(Math.random() * 10);
+
+        if (
+          opponentBoard.attackedCoords.some(
+            (coord) => coord.x === x && coord.y === y
+          )
+        ) {
+          startGame();
+          return;
+        }
+
+        currentPlayer.attack(x, y, opponentBoard);
+        boardEvents("battlefieldPlayer", battlefieldPlayer);
+
+        if (
+          opponentBoard.allSunk(
+            submarine,
+            cruiser,
+            destroyer,
+            battleship,
+            carrier
+          )
+        ) {
+          endGame(currentPlayer, turnDisplay);
+          return;
+        }
+
+        currentPlayer.endTurn(player);
+        startGame(); // Continue the game
+      }, 1000);
+    }
   }
-  
+
+  function endGame(winner, turnDisplay) {
+    turnDisplay.textContent = `${winner.getName()} is the winner!`;
+  }
 
   function boardEvents(boardName, board) {
     const boardDOM = document.querySelector(`#${boardName} > .grid`);
     const boardArr = board.board;
     const missedAttacksArr = board.missedAttacks;
-    //console.log(boardDOM, boardArr, missedAttacksArr)
 
     boardArr.forEach((row, y) => {
       row.forEach((cell, x) => {

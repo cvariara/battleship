@@ -25,11 +25,9 @@ class Player {
     return this.turn;
   }
 
-  attack(x, y, enemy, enemyBoard) {
+  attack(x, y, enemyBoard) {
     if (this.checkTurn()) {
       enemyBoard.receiveAttack(x, y);
-
-      this.endTurn(enemy); 
     }
   }
 }

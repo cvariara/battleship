@@ -7,14 +7,13 @@ class AI extends Player {
     this.turn = false;
   }
 
-  attack(enemy, enemyBoard) {
-    let x = Math.floor(Math.random() * 10);
-    let y = Math.floor(Math.random() * 10);
-    if (this.checkTurn()) {
-      enemyBoard.receiveAttack(x, y);
-      this.endTurn(enemy); 
-    }
-  }
+  // attack(enemyBoard) {
+  //   let x = Math.floor(Math.random() * 10);
+  //   let y = Math.floor(Math.random() * 10);
+  //   if (this.checkTurn()) {
+  //     enemyBoard.receiveAttack(x, y);
+  //   }
+  // }
 }
 
 export default AI;

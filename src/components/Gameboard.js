@@ -4,6 +4,7 @@ class Gameboard {
   constructor() {
     this.board = this.makeBoard();
     this.missedAttacks = [];
+    this.attackedCoords = [];
   }
 
   makeBoard() {
@@ -39,25 +40,25 @@ class Gameboard {
   }
 
   receiveAttack(x, y) {
-    if (this.board[y][x] !== "") {
-      let ship = this.board[y][x].name;
-      let id = this.board[y][x].id
-      ship.hit(id);
-    } else {
-      this.missedAttacks.push({ x, y })
+    if (!this.attackedCoords.some((coord) => coord.x === x && coord.y === y)) {
+      if (this.board[y][x] !== "") {
+        let ship = this.board[y][x].name;
+        let id = this.board[y][x].id;
+        ship.hit(id);
+      } else {
+        this.missedAttacks.push({ x, y });
+      }
+      this.attackedCoords.push({ x, y });
     }
   }
 
-  allSunk() {
-    let result = true;
-    this.board.forEach((item) => {
-      item.forEach((e) => {
-        if (e.ship) {
-          if (e.ship.isSunk() === false) result = false;
-        }
-      })
-    })
-    return result;
+  allSunk(...ships) {
+    let counter = 0;
+    ships.forEach((ship) => {
+      if (ship.isSunk()) counter++;
+    });
+    if (counter === 5) return true;
+    return false;
   }
 }
 
