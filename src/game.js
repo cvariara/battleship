@@ -5,7 +5,7 @@ import AI from "./components/AI";
 
 export function game() {
   // Players
-  const player = new Player("Chris");
+  const player = new Player("Player");
   const computer = new AI();
 
   // Boards
@@ -198,14 +198,13 @@ export function game() {
       oppBoard.addEventListener("click", function handleMove(e) {
         const x = parseInt(e.target.dataset.x);
         const y = parseInt(e.target.dataset.y);
-        
+
         oppBoard.removeEventListener("click", handleMove);
         if (
           opponentBoard.attackedCoords.some(
             (coord) => coord.x === x && coord.y === y
           )
         ) {
-
           startGame();
           return;
         }
@@ -271,7 +270,13 @@ export function game() {
   }
 
   function endGame(winner, turnDisplay) {
+    const restart = document.querySelector(".restart");
     turnDisplay.textContent = `${winner.getName()} is the winner!`;
+
+    restart.style.visibility = "visible";
+    restart.addEventListener("click", () => {
+      window.location.reload();
+    });
   }
 
   function boardEvents(boardName, board) {
